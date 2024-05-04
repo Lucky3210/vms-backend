@@ -42,8 +42,22 @@ class GenericUser(AbstractBaseUser, PermissionsMixin):
 
 # DEPARTMEMT MODEL - 
 class Department(models.Model):
+
+    DEPARTMENTS = (
+    ('MD\'s OFFICE','md\'s Office'),
+    ('HR','human resource'),
+    ('ADMIN','admin'),
+    ('NOC', 'noc'),
+    ('SCC','scc'),
+    ('MARKETING','marketing'),
+    ('FACILITY','facility'),
+    ('INNOVATION','innovation'),
+    ('DTH','dth'),
+    ('ISSD','issd'),
+)
+
     departmentId = models.AutoField(primary_key=True, blank=False, null=False, unique=True)
-    departmentName = models.CharField(max_length=50, unique=True)
+    departmentName = models.CharField(max_length=50, choices=DEPARTMENTS, default='MARKETING', unique=True)
 
     def __str__(self):
         return self.departmentName
@@ -79,7 +93,7 @@ class Visitor(models.Model):
     phoneNumber = PhoneNumberField()
     email = models.EmailField()
     organization = models.CharField(max_length=200)
-    numberOfGuest = models.PositiveIntegerField(max_length=100)
+    numberOfGuest = models.PositiveIntegerField()
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
     whomToSee = models.ManyToManyField(Staff, related_name='visitors')
     dateTime = models.DateTimeField(auto_now_add = True)
@@ -127,10 +141,10 @@ class VisitRequest(models.Model):
 class Attendant(models.Model):
 
     user = models.OneToOneField(GenericUser, on_delete=models.CASCADE)
-    staff = models.ForeignKey(Staff, on_delete=models.SET_NULL) 
+    staff = models.ForeignKey('Staff', on_delete=models.CASCADE) 
     firstName = models.CharField(max_length=100)
     lastName = models.CharField(max_length=100)
-    email = models.EmailField(unique=True)
+    # email = models.EmailField(unique=True)
     phone_number = PhoneNumberField()
 
     def __str__(self):

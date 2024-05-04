@@ -29,6 +29,10 @@ ALLOWED_HOSTS = []
 
 AUTH_USER_MODEL = 'vms.GenericUser'
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend'
+]
+
 
 # Application definition
 
@@ -42,6 +46,7 @@ INSTALLED_APPS = [
 
     'vms.apps.VmsConfig',
     'rest_framework',
+    'rest_framework.authtoken',
     'corsheaders',
     'phonenumber_field',
 ]
