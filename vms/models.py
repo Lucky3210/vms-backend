@@ -65,7 +65,7 @@ class Department(models.Model):
 
 # STAFF MODEL
 class Staff(models.Model):
-    staffId = models.AutoField(primary_key=True, unique=True)
+
     firstName = models.CharField(max_length=100)
     lastName = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
@@ -101,7 +101,6 @@ class Visitor(models.Model):
     reason = models.CharField(max_length=100, choices=REASONS, default=OFFICIAL)
     registrationTime = models.TimeField(default=timezone.now)
     registrationDate = models.DateField()
-    regDate = models.DateField()
     isApproved = models.BooleanField(default=False)
     checkOut = models.BooleanField(default=False)
 
@@ -130,7 +129,6 @@ class VisitRequest(models.Model):
         (DECLINED, 'Declined'),
     ]
 
-    visitRequestId = models.AutoField(primary_key=True, unique=True)
     visitor = models.ForeignKey('Visitor', on_delete=models.CASCADE)
     staff = models.ForeignKey('Staff', on_delete=models.CASCADE)
     attendant = models.ForeignKey('Attendant', on_delete=models.CASCADE, related_name='visit_requests') # user who sends the requeat to the selected staff
@@ -144,7 +142,6 @@ class VisitRequest(models.Model):
 # 
 class Attendant(models.Model):
 
-    attendantId = models.AutoField(primary_key=True, unique=True)
     user = models.OneToOneField(GenericUser, on_delete=models.CASCADE)
     staff = models.ForeignKey('Staff', on_delete=models.CASCADE) 
     firstName = models.CharField(max_length=100)

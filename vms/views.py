@@ -96,8 +96,8 @@ class ListVisitorView(generics.ListAPIView):
 class AcceptVisitRequest(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, visitRequestId):
-        visitRequest = VisitRequest.objects.get(id=visitRequestId)
+    def post(self, request, pk):
+        visitRequest = VisitRequest.objects.get(id=pk)
 
         # if visitRequest.staff != request.user:
         #     return Response({'error': 'You do not have permission to make this decision.'}, status=status.HTTP_403_FORBIDDEN)
@@ -126,8 +126,8 @@ class AcceptVisitRequest(APIView):
 class DeclineVisitRequest(APIView):
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, visitRequestId):
-        visitRequest = VisitRequest.objects.get(id=visitRequestId)
+    def post(self, request, pk):
+        visitRequest = VisitRequest.objects.get(id=pk)
 
         # if visitRequest.staff != request.user:
         #     return Response({'error': 'You do not have permission to make this decision.'}, status=status.HTTP_403_FORBIDDEN)
