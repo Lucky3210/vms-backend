@@ -183,6 +183,32 @@ class CheckInVisitorView(View):
         except VisitorLog.DoesNotExist:
             return Response({'message': 'Visitor not found'}, status=status.HTTP_400_BAD_REQUEST)
 
+
+# View for Staff Scheduling a Visit
+class StaffVisitRegisterView(generics.CreateAPIView):
+    serializer_class = VisitorSerializer
+    permission_classes = [IsAuthenticated] # only authenticated user(attendant/staff) can register a visitor
+
+    def perform_create(self, serializer):
+        # create new visitor instance
+        visitor = serializer.save()
+
+        # set isApproved to true
+        visitor.isApproved = True
+        visitor.save()
+        
+        # save visitor instance in the VLog db
+        staff = self.request.user
+
+        # create a new instance of the newly registered visitor and store in the visitorlog db
+        VisitorLog.objects.create(
+            visitor = visitor,
+            staff = staff,
+            checkInTime = timezone.now(),
+            )
+
+            
+        
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure only authenticated users can access this view
 

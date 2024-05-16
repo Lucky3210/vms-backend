@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import LoginView, LogoutView, RegisterVisitorView, ListVisitorView, AcceptVisitRequest, DeclineVisitRequest, CheckoutVisitorView, CheckInVisitorView
+from .views import *
 
 
 urlpatterns = [
@@ -11,4 +11,5 @@ urlpatterns = [
     path('api/visitRequest/<int:visitRequestId>/decline', DeclineVisitRequest.as_view(), name='declineVisitorReq'),
     path('api/checkout/<int:pk>', CheckoutVisitorView.as_view(), name='visitorCheckout'),
     path('api/checkin/<int:pk>', CheckInVisitorView.as_view(), name='visitorCheckin'),
+    path('api/staffVisitRegister', StaffVisitRegisterView.as_view(), name='staffVisitRegister'),
 ]
