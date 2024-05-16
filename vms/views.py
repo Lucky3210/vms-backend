@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
-from .serializers import VisitorSerializer
+from .serializers import VisitorSerializer, VisitorLogSerializer
 
 
 
@@ -196,7 +196,7 @@ class StaffVisitRegisterView(generics.CreateAPIView):
         # set isApproved to true
         visitor.isApproved = True
         visitor.save()
-        
+
         # save visitor instance in the VLog db
         staff = self.request.user
 
@@ -207,7 +207,17 @@ class StaffVisitRegisterView(generics.CreateAPIView):
             checkInTime = timezone.now(),
             )
 
-            
+
+# List all Staff Schedules
+class StaffScheduleListView(generics.ListAPIView):
+    queryset = VisitorLog.objects.all()
+    serializer_class = VisitorLogSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Filter visitor logs by staff member
+        return self.queryset.filter(staff=self.request.user)
+
         
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]  # Ensure only authenticated users can access this view
