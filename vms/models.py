@@ -97,7 +97,6 @@ class Visitor(models.Model):
     numberOfGuest = models.PositiveIntegerField()
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
     whomToSee = models.ManyToManyField(Staff, related_name='visitors')
-    dateTime = models.DateTimeField(auto_now_add = True)
     reason = models.CharField(max_length=100, choices=REASONS, default=OFFICIAL)
     registrationTime = models.TimeField(default=timezone.now)
     registrationDate = models.DateField()
@@ -111,8 +110,8 @@ class Visitor(models.Model):
 class VisitorLog(models.Model):
     visitor = models.ForeignKey(Visitor, on_delete=models.CASCADE)
     staff = models.ForeignKey(Staff, on_delete=models.CASCADE)
-    checkInTime = models.DateTimeField(auto_now_add=True)
-    checkOutTime = models.DateTimeField(null=True, blank=True)  # Check-out time is set when the visitor leaves
+    checkInTime = models.TimeField()
+    checkOutTime = models.TimeField(null=True, blank=True)  # Check-out time is set when the visitor leaves
     attendant = models.ForeignKey(GenericUser, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):

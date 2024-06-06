@@ -170,7 +170,7 @@ class CheckInVisitorView(View):
     def post(self, request, pk):
         try:
             visitorLog = VisitorLog.objects.get(id=pk)
-            visitorLog.checkOutTime = timezone.now()
+            visitorLog.checkInTime = timezone.now()
             visitorLog.save()
 
             # update the approved list
@@ -217,6 +217,11 @@ class StaffScheduleListView(generics.ListAPIView):
     def get_queryset(self):
         # Filter visitor logs by staff member
         return self.queryset.filter(staff=self.request.user)
+    
+
+# Staff Reschedule Visit
+class StaffRescheduleVisit(generics.UpdateAPIView):
+    pass
 
         
 class LogoutView(APIView):
