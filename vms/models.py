@@ -66,6 +66,7 @@ class Department(models.Model):
 # STAFF MODEL
 class Staff(models.Model):
 
+    staffId = models.CharField(max_length=20, unique=True)
     firstName = models.CharField(max_length=100)
     lastName = models.CharField(max_length=100)
     email = models.EmailField(unique=True)

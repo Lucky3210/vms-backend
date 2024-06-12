@@ -9,7 +9,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.views import APIView
-from .serializers import VisitorSerializer, VisitorLogSerializer
+from .serializers import VisitorSerializer, VisitorLogSerializer, VisitRequestSerializer
 
 
 
@@ -218,6 +218,23 @@ class StaffScheduleListView(generics.ListAPIView):
         # Filter visitor logs by staff member
         return self.queryset.filter(staff=self.request.user)
     
+
+# render visit request of a particular staff
+class ListVisitRequestView(generics.ListAPIView):
+    serializer_class = VisitRequestSerializer
+
+    def get_queryset(self):
+        staffId = self.kwargs['staffId']
+        return VisitRequest.objects.filter(staffId=staffId, status="Pending")
+
+
+# render staff-scheduled visit/appointment
+class ListStaffScheduleListView(generics.ListAPIView):
+    serializer_class = VisitRequestSerializer
+
+    def get_queryset(self):
+        staffId = self.kwargs['staffId']
+        return VisitRequest.objects.filter(staff__staffId=staffId, status="Approved")
 
 # Staff Reschedule Visit
 class StaffRescheduleVisit(generics.UpdateAPIView):
