@@ -43,7 +43,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     'vms.apps.VmsConfig',
     'rest_framework',
     'rest_framework.authtoken',
@@ -96,10 +95,10 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres', 
-        'USER': 'source',
-        'PASSWORD': 'lalala10',
-        'HOST': '127.0.0.1', 
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'makplang',
+        'HOST': '127.0.0.1',
         'PORT': '5432',
     }
 }
@@ -154,7 +153,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_CREDENTIALS = True
 
-CORS_ALLOW_ALL_ORIGINS = True # shouldn't be used in production
+CORS_ALLOW_ALL_ORIGINS = True  # shouldn't be used in production
 
 # EMAIL CONFIGURATION
 """
