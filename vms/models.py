@@ -143,7 +143,6 @@ class VisitRequest(models.Model):
 class Attendant(models.Model):
 
     user = models.OneToOneField(GenericUser, on_delete=models.CASCADE)
-    staff = models.ForeignKey('Staff', on_delete=models.CASCADE) 
     firstName = models.CharField(max_length=100)
     lastName = models.CharField(max_length=100)
     # email = models.EmailField(unique=True)
