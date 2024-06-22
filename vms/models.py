@@ -94,7 +94,7 @@ class Visitor(models.Model):
     lastName = models.CharField(max_length=20)
     phoneNumber = PhoneNumberField()
     email = models.EmailField()
-    organization = models.CharField(max_length=200)
+    organization = models.CharField(max_length=200, null=True)
     numberOfGuest = models.PositiveIntegerField()
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
     whomToSee = models.ManyToManyField(Staff, related_name='visitors')
