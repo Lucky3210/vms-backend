@@ -149,4 +149,4 @@ class Attendant(models.Model):
     phone_number = PhoneNumberField()
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.firstName} {self.lastName}"
