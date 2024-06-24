@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
-from django.shortcuts import render, redirect
+from django.shortcuts import render, get_object_or_404
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -39,7 +39,7 @@ class LoginView(APIView):
     def post(self, request):
         user_id = request.data.get('user_id')
         password = request.data.get('password')
-
+        # print(user_id,password)
         user = authenticate(request, username=user_id, password=password)
 
         if user is not None:
@@ -65,28 +65,31 @@ class RegisterVisitorView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
+        whom_to_see_id = self.request.data.get('whomToSee')
+        staff = get_object_or_404(Staff, id=whom_to_see_id)
+        
         # create new visitor instance
 
-        visitor = serializer.save()
+        visitor = serializer.save(whomToSee=staff)
 
         # save visitor instance in the VLog db
-        whom_to_see = visitor.whomToSee.all()
+        # whom_to_see = visitor.whomToSee.all()
         attendant = self.request.user
 
-        for staff in whom_to_see:
+        for staffs in staff:
             # create a new instance of the newly registered visitor and store in the visitorlog db
             VisitorLog.objects.create(
                 visitor=visitor,
-                staff=staff,
+                staff=staffs,
                 attendant=attendant,
                 checkInTime=timezone.now(),
             )
 
         # send visitor's details to the expected staff
-        staffId = self.request.data.get('staffId')
-        if staffId:
+        # staffId = self.request.data.get('whomToSee') # we get WhomToSee, because it references the staff details as defined above
+        if whom_to_see_id:
             try:
-                staff = Staff.objects.get(id=staffId)
+                staff = Staff.objects.get(id=whom_to_see_id)
                 attendant = self.request.user
                 VisitRequest.objects.create(
                     visitor=visitor,
@@ -107,7 +110,18 @@ class RegisterVisitorView(generics.CreateAPIView):
 # Render all visitors
 class ListVisitorView(generics.ListAPIView):
     serializer_class = VisitorSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
+
+    # queryset to return all the visitors
+    queryset = Visitor.objects.all()
+    def get_queryset(self):
+        return Visitor.objects.all().select_related('whomToSee')
+
+
+# Render all visitors that have been approved and checkout
+class ListVisitorLogView(generics.ListAPIView):
+    serializer_class = VisitorSerializer
+    # permission_classes = [IsAuthenticated]
 
     # queryset to return all the visitors
     queryset = VisitorLog.objects.all()  # visitorlog instead of visitor

@@ -8,6 +8,7 @@ urlpatterns = [
     path('api/registerVisitor', RegisterVisitorView.as_view(),
          name='registerVisitor'),
     path('api/visitorList', ListVisitorView.as_view(), name='visitor'),
+    path('api/visitorLogList', ListVisitorLogView.as_view(), name='visitorLog'),
     path('api/visitRequest/<int:pk>/accept',
          AcceptVisitRequest.as_view(), name='acceptVisitorReq'),
     path('api/visitRequest/<int:pk>/decline',

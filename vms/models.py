@@ -97,7 +97,7 @@ class Visitor(models.Model):
     organization = models.CharField(max_length=200, null=True)
     numberOfGuest = models.PositiveIntegerField()
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
-    whomToSee = models.ManyToManyField(Staff, related_name='visitors')
+    whomToSee = models.ForeignKey(Staff, on_delete=models.CASCADE, default=1, related_name='visitors') # by default visitor will see staff with ID of 1, that can be changed in the future
     reason = models.CharField(max_length=100, choices=REASONS, default=OFFICIAL)
     registrationTime = models.TimeField(default=timezone.now)
     registrationDate = models.DateField()
