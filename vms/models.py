@@ -94,7 +94,7 @@ class Visitor(models.Model):
     lastName = models.CharField(max_length=20)
     phoneNumber = PhoneNumberField()
     email = models.EmailField()
-    organization = models.CharField(max_length=200)
+    organization = models.CharField(max_length=200, null=True)
     numberOfGuest = models.PositiveIntegerField()
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
     whomToSee = models.ManyToManyField(Staff, related_name='visitors')
@@ -143,11 +143,10 @@ class VisitRequest(models.Model):
 class Attendant(models.Model):
 
     user = models.OneToOneField(GenericUser, on_delete=models.CASCADE)
-    staff = models.ForeignKey('Staff', on_delete=models.CASCADE) 
     firstName = models.CharField(max_length=100)
     lastName = models.CharField(max_length=100)
     # email = models.EmailField(unique=True)
     phone_number = PhoneNumberField()
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name}"
+        return f"{self.firstName} {self.lastName}"
