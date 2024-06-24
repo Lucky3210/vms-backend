@@ -1,16 +1,37 @@
-from django.contrib.auth import login, logout, authenticate
-from django.utils import timezone
-from django.conf import settings
-from django.core.mail import send_mail
-from django.views.generic import View
-from .models import GenericUser, Visitor, VisitorLog, Staff, VisitRequest
-from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.authtoken.models import Token
-from rest_framework.views import APIView
 from .serializers import VisitorSerializer, VisitorLogSerializer, VisitRequestSerializer
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
+from django.shortcuts import render, redirect
+from rest_framework.views import APIView
+from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework import generics, status
+from .models import GenericUser, Visitor, VisitorLog, Staff, VisitRequest
+from django.views.generic import View
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils import timezone
+from django.contrib.auth import login, logout, authenticate
 
+
+def register_user(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        email = request.POST['email']
+        is_staff = request.POST.get('is_staff', 'off') == 'on'
+
+        user = User.objects.create_user(
+            username=username, password=password, email=email)
+        user.is_staff = is_staff
+        user.save()
+
+        return HttpResponse(f'User {username} registered successfully')
+
+    return render(request, 'register.html')
 
 
 class LoginView(APIView):
@@ -27,12 +48,12 @@ class LoginView(APIView):
             login(request, user)
 
             return Response({
-                'status': 'success', 
+                'status': 'success',
                 'message': 'Login Successful',
-                'token' : token.key, 
+                'token': token.key,
                 'is_staff': user.is_staff
             }, status=status.HTTP_200_OK)
-        
+
         else:
             return Response({"error": "Invalid User ID or Password"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -40,11 +61,12 @@ class LoginView(APIView):
 # Register/Schedule Visitor
 class RegisterVisitorView(generics.CreateAPIView):
     serializer_class = VisitorSerializer
-    permission_classes = [IsAuthenticated] # only authenticated user(attendant/staff) can register a visitor
+    # only authenticated user(attendant/staff) can register a visitor
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         # create new visitor instance
-        
+
         visitor = serializer.save()
 
         # save visitor instance in the VLog db
@@ -54,12 +76,12 @@ class RegisterVisitorView(generics.CreateAPIView):
         for staff in whom_to_see:
             # create a new instance of the newly registered visitor and store in the visitorlog db
             VisitorLog.objects.create(
-                visitor = visitor,
-                staff = staff,
-                attendant = attendant,
-                checkInTime = timezone.now(),
-                )
-            
+                visitor=visitor,
+                staff=staff,
+                attendant=attendant,
+                checkInTime=timezone.now(),
+            )
+
         # send visitor's details to the expected staff
         staffId = self.request.data.get('staffId')
         if staffId:
@@ -67,10 +89,10 @@ class RegisterVisitorView(generics.CreateAPIView):
                 staff = Staff.objects.get(id=staffId)
                 attendant = self.request.user
                 VisitRequest.objects.create(
-                    visitor = visitor,
-                    staff = staff,
-                    attendant = attendant,
-                    status = VisitRequest.status
+                    visitor=visitor,
+                    staff=staff,
+                    attendant=attendant,
+                    status=VisitRequest.status
                 )
                 # Send email notification to the staff member
                 # subject = 'New Visitor Request'
@@ -88,9 +110,8 @@ class ListVisitorView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     # queryset to return all the visitors
-    queryset = VisitorLog.objects.all() # visitorlog instead of visitor
-    
-    
+    queryset = VisitorLog.objects.all()  # visitorlog instead of visitor
+
 
 # Accept Visitors Request
 class AcceptVisitRequest(APIView):
@@ -101,7 +122,7 @@ class AcceptVisitRequest(APIView):
 
         # if visitRequest.staff != request.user:
         #     return Response({'error': 'You do not have permission to make this decision.'}, status=status.HTTP_403_FORBIDDEN)
-        
+
         try:
             visitRequest.status = VisitRequest.APPROVED
             visitRequest.save()
@@ -116,10 +137,10 @@ class AcceptVisitRequest(APIView):
             visitor.isApproved = True
             visitor.save()
 
-            return Response({"message" : "Request Approved"}, status=status.HTTP_200_OK)
-        
+            return Response({"message": "Request Approved"}, status=status.HTTP_200_OK)
+
         except VisitRequest.DoesNotExist:
-            return Response({"error" : "Request Not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Request Not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 # Decline Visitors Request
@@ -140,10 +161,10 @@ class DeclineVisitRequest(APIView):
             visitor.isApproved = False
             visitor.save()
 
-            return Response({"message" : "Request Approved"}, status=status.HTTP_200_OK)
-        
+            return Response({"message": "Request Approved"}, status=status.HTTP_200_OK)
+
         except VisitRequest.DoesNotExist:
-            return Response({"error" : "Request Not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Request Not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 # Check out visitor view from the approval list
@@ -187,7 +208,8 @@ class CheckInVisitorView(View):
 # View for Staff Scheduling a Visit
 class StaffVisitRegisterView(generics.CreateAPIView):
     serializer_class = VisitorSerializer
-    permission_classes = [IsAuthenticated] # only authenticated user(attendant/staff) can register a visitor
+    # only authenticated user(attendant/staff) can register a visitor
+    permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
         # create new visitor instance
@@ -202,10 +224,10 @@ class StaffVisitRegisterView(generics.CreateAPIView):
 
         # create a new instance of the newly registered visitor and store in the visitorlog db
         VisitorLog.objects.create(
-            visitor = visitor,
-            staff = staff,
-            checkInTime = timezone.now(),
-            )
+            visitor=visitor,
+            staff=staff,
+            checkInTime=timezone.now(),
+        )
 
 
 # List all Staff Schedules
@@ -217,7 +239,7 @@ class StaffScheduleListView(generics.ListAPIView):
     def get_queryset(self):
         # Filter visitor logs by staff member
         return self.queryset.filter(staff=self.request.user)
-    
+
 
 # render visit request of a particular staff
 class ListVisitRequestView(generics.ListAPIView):
@@ -237,12 +259,15 @@ class ListStaffScheduleListView(generics.ListAPIView):
         return VisitRequest.objects.filter(staff__staffId=staffId, status="Approved")
 
 # Staff Reschedule Visit
+
+
 class StaffRescheduleVisit(generics.UpdateAPIView):
     pass
 
-        
+
 class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]  # Ensure only authenticated users can access this view
+    # Ensure only authenticated users can access this view
+    permission_classes = [IsAuthenticated]
 
     def post(self, request):
         # Logout the user
@@ -254,20 +279,20 @@ class LogoutView(APIView):
 # class LoginView(APIView):
 #     def post(self, request):
 #         serializer = UserSerializer(data=request.data)
-        
+
 #         if serializer.is_valid():
 #             # Authenticate the user
 #             user_id = serializer.validated_data.get('user_id')
 #             password = serializer.validated_data.get('password')
-            
+
 #             user = authenticate(request, user_id=user_id, password=password)
-            
+
 #             if user:
 #                 # Handle successful authentication (e.g., return a success response)
 #                 return Response({'status': 'success', 'message': 'Login successful'}, status=status.HTTP_200_OK)
 #             else:
 #                 # Handle invalid credentials
 #                 return Response({'status': 'error', 'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-        
+
 #         # Handle invalid request data
 #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
