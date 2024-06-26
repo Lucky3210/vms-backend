@@ -74,6 +74,12 @@ class Staff(models.Model):
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
     user = models.OneToOneField(GenericUser, on_delete=models.CASCADE)
 
+    def save(self, *args, **kwargs):
+            # Convert staff name to lowercase when created
+            self.firstName = self.firstName.lower()
+            self.lastName = self.lastName.lower()
+            super().save(*args, **kwargs)
+    
     def __str__(self):
         return f"{self.firstName} {self.lastName}"
     
@@ -105,7 +111,8 @@ class Visitor(models.Model):
     checkOut = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.firstName} {self.lastName} - Visiting: {[staff.__str__() for staff in self.whomToSee.all()]} REASON: {self.reason}"
+        return f"{self.firstName} {self.lastName} - Visiting: {self.whomToSee} REASON: {self.reason}"
+        # return f"{self.firstName} {self.lastName} - Visiting: {[staff.__str__() for staff in self.whomToSee.all()]} REASON: {self.reason}"
 
 # VISITORLOG MODEL   
 class VisitorLog(models.Model):
@@ -116,7 +123,7 @@ class VisitorLog(models.Model):
     attendant = models.ForeignKey(GenericUser, on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
-        return f"Visitor: {self.visitor}, Visits: {self.staff}, Check-in: {self.check_in_time}, Check-out: {self.check_out_time}"
+        return f"Visitor: {self.visitor}, Visits: {self.staff}, Check-in: {self.checkInTime}, Check-out: {self.checkOutTime}"
 
 # VISIT REQUEST MODEL - 
 class VisitRequest(models.Model):

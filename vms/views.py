@@ -1,4 +1,4 @@
-from .serializers import VisitorSerializer, VisitorLogSerializer, VisitRequestSerializer
+from .serializers import *
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
@@ -9,7 +9,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics, status
-from .models import GenericUser, Visitor, VisitorLog, Staff, VisitRequest
+from .models import *
 from django.views.generic import View
 from django.core.mail import send_mail
 from django.conf import settings
@@ -62,49 +62,47 @@ class LoginView(APIView):
 class RegisterVisitorView(generics.CreateAPIView):
     serializer_class = VisitorSerializer
     # only authenticated user(attendant/staff) can register a visitor
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        whom_to_see_id = self.request.data.get('whomToSee')
-        staff = get_object_or_404(Staff, id=whom_to_see_id)
-        
         # create new visitor instance
-
-        visitor = serializer.save(whomToSee=staff)
-
+        visitor = serializer.save()
+        
         # save visitor instance in the VLog db
-        # whom_to_see = visitor.whomToSee.all()
+        # attendant = get_object_or_404(Attendant, user=self.request.user)
         attendant = self.request.user
 
-        for staffs in staff:
-            # create a new instance of the newly registered visitor and store in the visitorlog db
-            VisitorLog.objects.create(
+        # create a new instance of the newly registered visitor and store in the visitorlog db
+        VisitorLog.objects.create(
                 visitor=visitor,
-                staff=staffs,
+                staff=visitor.whomToSee,
                 attendant=attendant,
                 checkInTime=timezone.now(),
             )
 
         # send visitor's details to the expected staff
-        # staffId = self.request.data.get('whomToSee') # we get WhomToSee, because it references the staff details as defined above
-        if whom_to_see_id:
-            try:
-                staff = Staff.objects.get(id=whom_to_see_id)
-                attendant = self.request.user
-                VisitRequest.objects.create(
-                    visitor=visitor,
-                    staff=staff,
-                    attendant=attendant,
-                    status=VisitRequest.status
-                )
+        
+        firstName, lastName = self.request.data.get('whomToSeeInput').split(maxsplit=1)
+        print(firstName, lastName)
+        try:
+            staffMember = Staff.objects.get(firstName=firstName.lower(), lastName=lastName.lower())
+            print(staffMember)
+        except Staff.DoesNotExist:
+            return Response({'error': f'Staff with name "{firstName}, {lastName}" does not exist'}, status=status.HTTP_400_BAD_REQUEST)
+    
+        VisitRequest.objects.create(
+            visitor=visitor,
+            staff=staffMember,
+            attendant=attendant,
+            status=VisitRequest.status,
+        )
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
                 # Send email notification to the staff member
                 # subject = 'New Visitor Request'
                 # message = f'Hello {staff.name},\n\nYou have a new visitor request.\nVisitor Details:\nName: {visitor.firstName} {visitor.lastName}\nEmail: {visitor.email}\nPhone: {visitor.phoneNumber}\n\nPlease login to your account to approve or decline the request.\n\nBest regards,\nIGCOMSAT'
 
                 # send_mail(subject, message, settings.EMAIL_HOST_USER, [staff.email])
-
-            except Staff.DoesNotExist:
-                return Response({"error": "Invalid Staff ID"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Render all visitors
@@ -115,16 +113,23 @@ class ListVisitorView(generics.ListAPIView):
     # queryset to return all the visitors
     queryset = Visitor.objects.all()
     def get_queryset(self):
-        return Visitor.objects.all().select_related('whomToSee')
+        return Visitor.objects.all().select_related('whomToSee', 'department')
 
+
+# Render all staff
+class ListStaffView(generics.ListAPIView):
+    serializer_class = StaffSerializer
+    queryset = Staff.objects.all()
+    def get_queryset(self):
+        return Staff.objects.all().select_related('department')
 
 # Render all visitors that have been approved and checkout
 class ListVisitorLogView(generics.ListAPIView):
-    serializer_class = VisitorSerializer
+    serializer_class = VisitorLogSerializer
     # permission_classes = [IsAuthenticated]
 
     # queryset to return all the visitors
-    queryset = VisitorLog.objects.all()  # visitorlog instead of visitor
+    queryset = VisitorLog.objects.all().select_related('visitor', 'staff')  # visitorlog instead of visitor
 
 
 # Accept Visitors Request
@@ -260,9 +265,12 @@ class ListVisitRequestView(generics.ListAPIView):
     serializer_class = VisitRequestSerializer
 
     def get_queryset(self):
-        staffId = self.kwargs['staffId']
-        return VisitRequest.objects.filter(staffId=staffId, status="Pending")
-
+        # Retrieve the staff ID from the URL query parameters or request data
+        staff_id = self.request.query_params.get('staff_id')
+        
+        # Filter VisitRequest objects based on the staff ID
+        queryset = VisitRequest.objects.filter(staff__id=staff_id)
+        return queryset
 
 # render staff-scheduled visit/appointment
 class ListStaffScheduleListView(generics.ListAPIView):
