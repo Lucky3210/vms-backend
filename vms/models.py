@@ -140,17 +140,19 @@ class VisitRequest(models.Model):
     PENDING = 'Pending'
     APPROVED = 'Approved'
     DECLINED = 'Declined'
+    DISMISSED = 'Dismissed'
     STATUS_CHOICES = [
         (PENDING, 'Pending'),
         (APPROVED, 'Approved'),
         (DECLINED, 'Declined'),
+        (DISMISSED, 'Dismissed')
     ]
 
     visitor = models.ForeignKey('Visitor', on_delete=models.CASCADE)
     staff = models.ForeignKey('Staff', on_delete=models.CASCADE)
     # attendant = models.ForeignKey('Attendant', on_delete=models.CASCADE, related_name='visit_requests') # user who sends the requeat to the selected staff
     request_time = models.DateTimeField(default=timezone.now)
-    status = models.CharField(max_length=8, choices=STATUS_CHOICES, default=PENDING)
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES, default=PENDING)
     feedback = models.TextField(blank=True, null=True)  # Optional field for staff to provide feedback
 
     def __str__(self):

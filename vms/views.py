@@ -135,10 +135,10 @@ class ListVisitorLogView(generics.ListAPIView):
 
 # Accept Visitors Request
 class AcceptVisitRequest(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
-        visitRequest = VisitRequest.objects.get(id=pk)
+        visitRequest = VisitRequest.objects.get(visitor__id=pk)
 
         # if visitRequest.staff != request.user:
         #     return Response({'error': 'You do not have permission to make this decision.'}, status=status.HTTP_403_FORBIDDEN)
@@ -165,10 +165,10 @@ class AcceptVisitRequest(APIView):
 
 # Decline Visitors Request
 class DeclineVisitRequest(APIView):
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
-        visitRequest = VisitRequest.objects.get(id=pk)
+        visitRequest = VisitRequest.objects.get(visitor__id=pk)
 
         # if visitRequest.staff != request.user:
         #     return Response({'error': 'You do not have permission to make this decision.'}, status=status.HTTP_403_FORBIDDEN)
@@ -181,48 +181,58 @@ class DeclineVisitRequest(APIView):
             visitor.isApproved = False
             visitor.save()
 
-            return Response({"message": "Request Approved"}, status=status.HTTP_200_OK)
+            return Response({"message": "Request Declined"}, status=status.HTTP_200_OK)
 
         except VisitRequest.DoesNotExist:
             return Response({"error": "Request Not found"}, status=status.HTTP_404_NOT_FOUND)
 
 
 # Check out visitor view from the approval list
-class CheckoutVisitorView(View):
+class CheckoutVisitorView(APIView):
     def post(self, request, pk):
+        visitorLog = get_object_or_404(VisitorLog, visitor__id=pk)
+        visitorLog.checkOutTime = timezone.now()
+        visitorLog.save()
+
+        # access visitor instance and approve visitor
+        visitor = visitorLog.visitor
+        visitor.isApproved = False
+        visitor.checkOut = True
+        visitor.save()
+
+        # Update the status in the VisitRequest to Approved
         try:
-            visitorLog = VisitorLog.objects.get(id=pk)
-            visitorLog.checkOutTime = timezone.now()
-            visitorLog.save()
+            visitRequest = VisitRequest.objects.get(visitor=visitor)
+            visitRequest.status = VisitRequest.DISMISSED
+            visitRequest.save()
+        except VisitRequest.DoesNotExist:
+            return Response({'message': 'VisitRequest not found for this visitor'}, status=status.HTTP_404_NOT_FOUND)
 
-            # update the approved list
-            visitor = VisitorLog.visitor
-            visitor.isApproved = False
-            visitor.checkOut = True
-            visitor.save()
-
-            return Response({'message': 'Checkout successful'}, status=status.HTTP_200_OK)
-        except VisitorLog.DoesNotExist:
-            return Response({'message': 'Visitor not found'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': 'Check out successful'}, status=status.HTTP_200_OK)
 
 
-# Check in a vistor from the waiting list
-class CheckInVisitorView(View):
+# Check in a vistor from the waiting list(automatically approves them and set their status to approved)
+class CheckInVisitorView(APIView):
     def post(self, request, pk):
+        visitorLog = get_object_or_404(VisitorLog, visitor__id=pk)
+        visitorLog.checkInTime = timezone.now()
+        visitorLog.save()
+
+        # access visitor instance and approve visitor
+        visitor = visitorLog.visitor
+        visitor.isApproved = True
+        visitor.checkOut = False
+        visitor.save()
+
+        # Update the status in the VisitRequest to Approved
         try:
-            visitorLog = VisitorLog.objects.get(id=pk)
-            visitorLog.checkInTime = timezone.now()
-            visitorLog.save()
+            visitRequest = VisitRequest.objects.get(visitor=visitor)
+            visitRequest.status = VisitRequest.APPROVED
+            visitRequest.save()
+        except VisitRequest.DoesNotExist:
+            return Response({'message': 'VisitRequest not found for this visitor'}, status=status.HTTP_404_NOT_FOUND)
 
-            # update the approved list
-            visitor = VisitorLog.visitor
-            visitor.isApproved = True
-            visitor.checkOut = False
-            visitor.save()
-
-            return Response({'message': 'CheckIn successful'}, status=status.HTTP_200_OK)
-        except VisitorLog.DoesNotExist:
-            return Response({'message': 'Visitor not found'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': 'Check in successful'}, status=status.HTTP_200_OK)
 
 
 # View for Staff Scheduling a Visit
@@ -261,31 +271,69 @@ class StaffScheduleListView(generics.ListAPIView):
         return self.queryset.filter(staff=self.request.user)
 
 
-# render visit request of a particular staff
-class ListVisitRequestView(generics.ListAPIView):
-    # permission_classes = [IsAuthenticated]
+# render request for a specific staff(pending, approved, declined)
+class VisitRequestStatusView(generics.ListAPIView):
     serializer_class = VisitRequestSerializer
 
     def get_queryset(self):
-        # Retrieve the staff ID from the URL query parameters or request data
+        # Retrieve the status and staff_id from query parameters
+        status = self.request.query_params.get('status', 'pending')
         staff_id = self.request.query_params.get('staff_id')
-        # print(staff_id)
-        
-        # Filter VisitRequest objects based on the staff ID
-        queryset = VisitRequest.objects.filter(staff__staffId=staff_id).select_related('visitor', 'staff')
+
+        # Filter queryset based on status and staff_id
+        queryset = VisitRequest.objects.all()
+
+        if staff_id:
+            queryset = queryset.filter(staff__staffId=staff_id)
+
+        if status.lower() in ['pending', 'approved', 'declined', 'dismissed']:
+            queryset = queryset.filter(status=status.capitalize())
+        else:
+            queryset = queryset.none()  # Return empty queryset if status is invalid
+
         return queryset
 
-# render staff-scheduled visit/appointment
-class ListStaffScheduleListView(generics.ListAPIView):
-    serializer_class = VisitRequestSerializer
 
-    def get_queryset(self):
-        staffId = self.kwargs['staffId']
-        return VisitRequest.objects.filter(staff__staffId=staffId, status="Approved")
+# render all visit request, both approved and pending
+class AllVisitRequest(generics.ListAPIView):
+    serializer_class = VisitRequestSerializer
+    queryset = VisitRequest.objects.all()
+
+
+# # render visit request of a particular staff(All pending request)
+# class ListVisitRequestView(generics.ListAPIView):
+#     # permission_classes = [IsAuthenticated]
+#     serializer_class = VisitRequestSerializer
+
+#     def get_queryset(self):
+#         # Retrieve the staff ID from the URL query parameters or request data
+#         staff_id = self.request.query_params.get('staff_id')
+#         if staff_id is not None:
+#             queryset = VisitRequest.objects.filter(staff__staffId=staff_id, status="Pending").select_related('visitor', 'staff')
+
+#         else:
+#             queryset = VisitRequest.objects.all()
+
+#         return queryset
+
+# # render staff-scheduled visit/appointment (Visitors that have been approved)
+# class StaffApprovedVisitorView(generics.ListAPIView):
+#     # permission_classes = [IsAuthenticated]
+#     serializer_class = VisitRequestSerializer
+
+#     def get_queryset(self):
+#         # Retrieve the staff ID from the URL query parameters or request data
+#         staff_id = self.request.query_params.get('staff_id')
+#         if staff_id is not None:
+#             queryset = VisitRequest.objects.filter(staff__staffId=staff_id, status="Approved").select_related('visitor', 'staff')
+
+#         else:
+#             queryset = VisitRequest.objects.all()
+
+#         return queryset
+    
 
 # Staff Reschedule Visit
-
-
 class StaffRescheduleVisit(generics.UpdateAPIView):
     pass
 

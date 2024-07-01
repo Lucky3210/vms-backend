@@ -21,7 +21,7 @@ class VisitorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Visitor
-        fields = ['firstName', 'lastName', 'email', 'phoneNumber', 'organization', 'department', 'isApproved', 'whomToSee', 'whomToSeeInput', 'numberOfGuest', 'reason', 'visitDate', 'visitTime', 'registrationTime', 'registrationDate']
+        fields = ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'organization', 'department', 'isApproved', 'whomToSee', 'whomToSeeInput', 'numberOfGuest', 'reason', 'visitDate', 'visitTime', 'registrationTime', 'registrationDate']
 
 
     def validate(self, data):
@@ -76,7 +76,7 @@ class VisitorLogSerializer(serializers.ModelSerializer):
     staff = StaffSerializer(read_only=True)
     class Meta:
         model = VisitorLog
-        fields = ['visitor', 'staff', 'checkInTime', 'checkOutTime']
+        fields = ['id', 'visitor', 'staff', 'checkInTime', 'checkOutTime']
 
 class VisitRequestSerializer(serializers.ModelSerializer):
     visitor = VisitorSerializer(read_only=True)
