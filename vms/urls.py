@@ -20,7 +20,8 @@ urlpatterns = [
          name='staffVisitRegister'),
     path('api/staffVisit', StaffScheduleListView.as_view(), name='StaffVisitList'),
     path('api/staffList', ListStaffView.as_view(), name='StaffList'),
-    path('api/visitRequestList/<int:pk>', ListVisitRequestView.as_view(), name="ListVisitRequest")
+    path('api/visitRequestList/', ListVisitRequestView.as_view(), name="ListVisitRequest")
+#     http://localhost:8000/api/visitRequestList/?staff_id=1600
 
 ]
 

@@ -96,6 +96,13 @@ class Visitor(models.Model):
         (MARKETING, 'Marketing')
     ]
 
+    ONSITE = 'onsite'
+    ONLINE = 'online'
+    ORIGIN = [
+        (ONSITE, 'onsite'),
+        (ONLINE, 'online')
+    ]
+
     firstName = models.CharField(max_length=20)
     lastName = models.CharField(max_length=20)
     phoneNumber = PhoneNumberField()
@@ -105,10 +112,13 @@ class Visitor(models.Model):
     department = models.ForeignKey(Department, on_delete=models.SET_NULL, null=True, blank=True)
     whomToSee = models.ForeignKey(Staff, on_delete=models.CASCADE, default=1, related_name='visitors') # by default visitor will see staff with ID of 1, that can be changed in the future
     reason = models.CharField(max_length=100, choices=REASONS, default=OFFICIAL)
+    visitDate = models.DateField(null=True, blank=True)
+    visitTime = models.TimeField(null=True, blank=True)
     registrationTime = models.TimeField(default=timezone.now)
     registrationDate = models.DateField()
     isApproved = models.BooleanField(default=False)
     checkOut = models.BooleanField(default=False)
+    origin = models.CharField(max_length=8, choices=ORIGIN, default=ONLINE)
 
     def __str__(self):
         return f"{self.firstName} {self.lastName} - Visiting: {self.whomToSee} REASON: {self.reason}"
@@ -138,7 +148,7 @@ class VisitRequest(models.Model):
 
     visitor = models.ForeignKey('Visitor', on_delete=models.CASCADE)
     staff = models.ForeignKey('Staff', on_delete=models.CASCADE)
-    attendant = models.ForeignKey('Attendant', on_delete=models.CASCADE, related_name='visit_requests') # user who sends the requeat to the selected staff
+    # attendant = models.ForeignKey('Attendant', on_delete=models.CASCADE, related_name='visit_requests') # user who sends the requeat to the selected staff
     request_time = models.DateTimeField(default=timezone.now)
     status = models.CharField(max_length=8, choices=STATUS_CHOICES, default=PENDING)
     feedback = models.TextField(blank=True, null=True)  # Optional field for staff to provide feedback

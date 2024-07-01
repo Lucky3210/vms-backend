@@ -83,18 +83,19 @@ class RegisterVisitorView(generics.CreateAPIView):
         # send visitor's details to the expected staff
         
         firstName, lastName = self.request.data.get('whomToSeeInput').split(maxsplit=1)
-        print(firstName, lastName)
+        # print(firstName, lastName) 
+        # print(visitor.whomToSee)
         try:
             staffMember = Staff.objects.get(firstName=firstName.lower(), lastName=lastName.lower())
             print(staffMember)
         except Staff.DoesNotExist:
             return Response({'error': f'Staff with name "{firstName}, {lastName}" does not exist'}, status=status.HTTP_400_BAD_REQUEST)
-    
+        
         VisitRequest.objects.create(
             visitor=visitor,
             staff=staffMember,
-            attendant=attendant,
-            status=VisitRequest.status,
+            # attendant=attendant,
+            status=VisitRequest.PENDING,
         )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -262,14 +263,16 @@ class StaffScheduleListView(generics.ListAPIView):
 
 # render visit request of a particular staff
 class ListVisitRequestView(generics.ListAPIView):
+    # permission_classes = [IsAuthenticated]
     serializer_class = VisitRequestSerializer
 
     def get_queryset(self):
         # Retrieve the staff ID from the URL query parameters or request data
         staff_id = self.request.query_params.get('staff_id')
+        # print(staff_id)
         
         # Filter VisitRequest objects based on the staff ID
-        queryset = VisitRequest.objects.filter(staff__id=staff_id)
+        queryset = VisitRequest.objects.filter(staff__staffId=staff_id).select_related('visitor', 'staff')
         return queryset
 
 # render staff-scheduled visit/appointment
