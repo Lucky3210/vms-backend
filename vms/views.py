@@ -112,9 +112,33 @@ class ListVisitorView(generics.ListAPIView):
     # permission_classes = [IsAuthenticated]
 
     # queryset to return all the visitors
-    queryset = Visitor.objects.all()
+    # queryset = Visitor.objects.all()
+    # def get_queryset(self):
+    #     return Visitor.objects.all().select_related('whomToSee', 'department')
+
     def get_queryset(self):
-        return Visitor.objects.all().select_related('whomToSee', 'department')
+        # Retrieve the status and staff_id from query parameters
+        isApproved = self.request.query_params.get('isApproved')
+        checkOut = self.request.query_params.get('checkOut')
+
+        # Filter queryset based on isApproved and checkOut
+        queryset = Visitor.objects.all().select_related('whomToSee', 'department')
+
+        if isApproved:
+            queryset = queryset.filter(isApproved=isApproved)
+
+        if checkOut:
+            queryset = queryset.filter(checkOut=checkOut)
+        else:
+            queryset = queryset  # Return empty queryset if status is invalid
+
+        return queryset
+
+# APPROVED VISITORS LIST - localhost:8000/api/visitorList?isApproved=True&checkOut=False
+# WAITING LIST - localhost:8000/api/visitorList?isApproved=False&checkOut=False
+# VISITORS REQUEST - localhost:8000/api/visitRequestList/
+# VISITORS REQUEST ON STAFF DASHBOARD - localhost:8000/api/visitRequestList/?staff_id=1600&status=Pending
+# ALL VISITORS - localhost:8000/api/visitorLogList (because visitorLog contains visitor timeout)
 
 
 # Render all staff

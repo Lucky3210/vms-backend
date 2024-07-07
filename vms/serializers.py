@@ -21,7 +21,7 @@ class VisitorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Visitor
-        fields = ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'organization', 'department', 'isApproved', 'whomToSee', 'whomToSeeInput', 'numberOfGuest', 'reason', 'visitDate', 'visitTime', 'registrationTime', 'registrationDate']
+        fields = ['id', 'firstName', 'lastName', 'email', 'phoneNumber', 'organization', 'department', 'isApproved',  'checkOut', 'whomToSee', 'whomToSeeInput', 'numberOfGuest', 'reason', 'visitDate', 'visitTime', 'registrationTime', 'registrationDate']
 
 
     def validate(self, data):
