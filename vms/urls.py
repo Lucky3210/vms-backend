@@ -30,17 +30,19 @@ urlpatterns = [
 
 """
     {
-        "firstName": "Havy",
-        "lastName": "Lil",
-        "email": "lilhavy@lili.com",
-        "phoneNumber": "+2349096112330",
-        "organization": "Lil Express",
-        "department": "",
-        "isApproved": false,
-        "whomToSeeInput":"Ken Lam",
-        "numberOfGuest": 1,
-        "reason": "Official",
-        "registrationTime": "12:31:48",
-        "registrationDate": "2024-06-24"
+    "firstName": "Havy",
+    "lastName": "Lil",
+    "email": "lilhavy@lili.com",
+    "phoneNumber": "+2349096112330",
+    "organization": "Lil Express",
+    "department": "",
+    "isApproved": false,
+    "whomToSeeInput":"Ken Lam",
+    "numberOfGuest": 1,
+    "reason": "Official",
+    "registrationTime": "12:31:48",
+    "registrationDate": "2024-06-24",
+    "visitDate": "2024-06-24",
+    "visitTime": "12:31:48"
     }
  """

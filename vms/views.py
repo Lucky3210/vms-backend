@@ -64,6 +64,14 @@ class RegisterVisitorView(generics.CreateAPIView):
     # only authenticated user(attendant/staff) can register a visitor
     # permission_classes = [IsAuthenticated]
 
+    def create(self, request, *args, **kwargs):
+        # Print the request data
+        print("Request data:", request.data)
+
+        # Call the original create method to perform the creation
+        response = super().create(request, *args, **kwargs)
+        return response
+
     def perform_create(self, serializer):
         # create new visitor instance
         visitor = serializer.save()
@@ -73,12 +81,12 @@ class RegisterVisitorView(generics.CreateAPIView):
         attendant = self.request.user
 
         # create a new instance of the newly registered visitor and store in the visitorlog db
-        VisitorLog.objects.create(
-                visitor=visitor,
-                staff=visitor.whomToSee,
-                attendant=attendant,
-                checkInTime=timezone.now(),
-            )
+        # VisitorLog.objects.create(
+        #         visitor=visitor,
+        #         staff=visitor.whomToSee,
+        #         attendant=attendant,
+        #         checkInTime=timezone.now(),
+        #     )
 
         # send visitor's details to the expected staff
         

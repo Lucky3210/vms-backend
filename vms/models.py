@@ -3,6 +3,8 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 from phonenumber_field.modelfields import PhoneNumberField
 from django.utils import timezone
 from django.core.validators import RegexValidator
+from datetime import datetime
+from django.utils.timezone import now
 
 # Creating custom user 
 class CustomUserManager(BaseUserManager):
@@ -103,6 +105,12 @@ class Visitor(models.Model):
         (ONLINE, 'online')
     ]
 
+    def get_current_time():
+        return now().time()
+
+    def get_current_date():
+        return now().date()
+
     firstName = models.CharField(max_length=20)
     lastName = models.CharField(max_length=20)
     phoneNumber = PhoneNumberField()
@@ -114,8 +122,8 @@ class Visitor(models.Model):
     reason = models.CharField(max_length=100, choices=REASONS, default=OFFICIAL)
     visitDate = models.DateField(null=True, blank=True)
     visitTime = models.TimeField(null=True, blank=True)
-    registrationTime = models.TimeField(default=timezone.now)
-    registrationDate = models.DateField()
+    registrationTime = models.TimeField(default=get_current_time)
+    registrationDate = models.DateField(default=get_current_date)
     isApproved = models.BooleanField(default=False)
     checkOut = models.BooleanField(default=False)
     origin = models.CharField(max_length=8, choices=ORIGIN, default=ONLINE)
